@@ -4,59 +4,17 @@ Strata's ready-made engine and the support matrix start at compute capability 7.
 engine compiled for it, through the experimental build that issue #236 added. It is **community-tested, not part of the
 supported cards**: no ready-made engine is published for it and the numbers below come from one machine.
 
-## Real repository/tool workload comparison (2026-11-15)
-
-On this pair of V100-PCIE-16GB cards at 175 W, NVFP4-QAD measured
-**55.6 tok/s** on matched repository continuations and **59.75 tok/s**
-in live read/search loops. The current IQ3_XXS model measured
-**66.5** and **71.1 tok/s**, respectively. The earlier synthetic
-NVFP4 result near 95 tok/s is not a daily-use estimate.
-
-The comparison made 157 streamed requests, with the same installed engine,
-low reasoning effort, zero reasoning budget and shared sampling. Contexts
-ranged from 2,187 to 121,026 tokens. It used real source text, with both
-fixed tool-result histories and model-selected read/search calls.
-This is not private production traffic or a task-quality benchmark.
-IQ3 decode drifted between rounds; raw results retain that variation.
-The daily model was not switched.
-
-See the [method, latency results and every measured request](../benchmarks/v100-real-repo-2026-11-15.md).
-
 ## Exact tiled prompt scoring (2026-11-14)
 
-`STRATA_SCORES_PROMPT_HALVE=1` enables a CUDA prompt scorer inspired by
-[1Cat-vLLM #1176](https://github.com/1CatAI/1Cat-vLLM/pull/1176).
-Strata already shared keys across eight queries. This change also uses
-the existing shuffle-reduced scorer for prompt batches larger than eight
-queries. It preserves the exact score arithmetic, including partial blocks
-and query-tile tails. The switch is off by default.
-
-Measured on GPU0, a Tesla V100-PCIE-16GB at 175 W, with CUDA 12.8.93,
-driver 580.178.04 and a Ryzen 5 3600. The service was stopped during these
-component runs. Each entry is the median of six process runs, with 20
-CUDA-event repetitions each. Every call scored 256 queries, with capacity
-for 262,144 cells.
-
-| Live cells | Existing exact scorer | Tiled halve scorer | Speedup |
-| ---: | ---: | ---: | ---: |
-| 32,768 | 0.825 ms | 0.659 ms | 1.25x |
-| 131,072 | 3.527 ms | 2.489 ms | 1.42x |
-| 200,000 | 5.631 ms | 3.916 ms | 1.44x |
-
-The parity runner compared 138,898,872 scores bit for bit across 12 cases.
-It covered query-tile tails, partial blocks, ties and large magnitudes.
-The four-query experiment also passed but was slower, so it was removed.
-Raw runs are in
-[`components.json`](../bench/results/2026-11-14-1cat-v100/components.json).
-
-These are scorer timings, not model throughput. `STRATA_SELECT_SIMT=1`
-or `=2` can select a different scorer before this route is reached.
-The daily V100 profile uses `=1`; this new switch does not override it.
-`STRATA_SCORES_THREAD=1` also keeps precedence. To compare the exact
-scorers, set `STRATA_SELECT_SIMT=0` and `STRATA_SCORES_THREAD=0` in both
-arms, and change only `STRATA_SCORES_PROMPT_HALVE`.
-The HIP dispatch is unchanged. The touched file compiled for HIP gfx1100;
-no AMD runtime check was possible. The separate SYCL sources are unchanged.
+`STRATA_SCORES_PROMPT_HALVE=1` enables an optional CUDA exact prompt scorer
+inspired by [1Cat-vLLM #1176](https://github.com/1CatAI/1Cat-vLLM/pull/1176).
+On a V100-PCIE-16GB at 175 W (CUDA 12.8.93), 256-query scorer medians
+improved from 0.825/3.527/5.631 ms to 0.659/2.489/3.916 ms at
+32K/131K/200K live cells. Each arm had six samples of 20 repetitions.
+All 138,898,872 parity scores matched bit for bit; both scorer CTests passed.
+These are component gains, not model-throughput gains. The daily profile's
+`STRATA_SELECT_SIMT=1` bypasses this route and remains faster.
+`STRATA_SCORES_THREAD=1` also keeps precedence. The switch defaults off.
 
 ## Exact long-context QSA selection (2026-11-12)
 
