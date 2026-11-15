@@ -4,6 +4,24 @@ Strata's ready-made engine and the support matrix start at compute capability 7.
 engine compiled for it, through the experimental build that issue #236 added. It is **community-tested, not part of the
 supported cards**: no ready-made engine is published for it and the numbers below come from one machine.
 
+## Real repository/tool workload comparison (2026-11-15)
+
+On this pair of V100-PCIE-16GB cards at 175 W, NVFP4-QAD measured
+**55.6 tok/s** on matched repository continuations and **59.75 tok/s**
+in live read/search loops. The current IQ3_XXS model measured
+**66.5** and **71.1 tok/s**, respectively. The earlier synthetic
+NVFP4 result near 95 tok/s is not a daily-use estimate.
+
+The comparison made 157 streamed requests, with the same installed engine,
+low reasoning effort, zero reasoning budget and shared sampling. Contexts
+ranged from 2,187 to 121,026 tokens. It used real source text, with both
+fixed tool-result histories and model-selected read/search calls.
+This is not private production traffic or a task-quality benchmark.
+IQ3 decode drifted between rounds; raw results retain that variation.
+The daily model was not switched.
+
+See the [method, latency results and every measured request](../benchmarks/v100-real-repo-2026-11-15.md).
+
 ## Exact tiled prompt scoring (2026-11-14)
 
 `STRATA_SCORES_PROMPT_HALVE=1` enables a CUDA prompt scorer inspired by

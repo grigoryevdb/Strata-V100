@@ -6,6 +6,7 @@ This directory is the contributor-facing index for Strata benchmark results acro
 
 | Accelerator | Model | Quantization | Context | Results |
 | --- | --- | --- | ---: | --- |
+| 2 × NVIDIA Tesla V100-PCIE-16GB + Ryzen 5 3600 | Qwen3.8-Flash-Next | IQ3_XXS versus NVFP4-QAD | 2K–121K actual prompts | [Real repository/tool workloads, 2026-11-15](v100-real-repo-2026-11-15.md) |
 | 1–2 × NVIDIA Tesla V100-PCIE-16GB + Ryzen 5 3600 | Qwen3.8-Flash-Next NVFP4-QAD / synthetic scorer | NVFP4 / exact FP32 scores | 2K / 32K model; 32K–200K scorer | [1Cat PR experiments, 2026-11-14](v100-1cat-2026-11-14.md) |
 | NVIDIA Tesla V100-PCIE-16GB | Qwen3.8-Flash-Next | Q2_0 | 262,144 | [V100, 2026-09-28](v100-pcie-16gb-q2_0-2026-09-28.md) |
 | 2 × NVIDIA Tesla V100-PCIE-16GB | Qwen3.8-Flash-Next | Q2_0 | 4K / 32K / 128K | [PR 600 Volta prompt attention, 2026-10-03](v100-q2_0-pr600-2026-10-03.md) |
