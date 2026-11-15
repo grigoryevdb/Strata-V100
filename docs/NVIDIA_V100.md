@@ -4,6 +4,18 @@ Strata's ready-made engine and the support matrix start at compute capability 7.
 engine compiled for it, through the experimental build that issue #236 added. It is **community-tested, not part of the
 supported cards**: no ready-made engine is published for it and the numbers below come from one machine.
 
+## Exact tiled prompt scoring (2026-11-14)
+
+`STRATA_SCORES_PROMPT_HALVE=1` enables an optional CUDA exact prompt scorer
+inspired by [1Cat-vLLM #1176](https://github.com/1CatAI/1Cat-vLLM/pull/1176).
+On a V100-PCIE-16GB at 175 W (CUDA 12.8.93), 256-query scorer medians
+improved from 0.825/3.527/5.631 ms to 0.659/2.489/3.916 ms at
+32K/131K/200K live cells. Each arm had six samples of 20 repetitions.
+All 138,898,872 parity scores matched bit for bit; both scorer CTests passed.
+These are component gains, not model-throughput gains. The daily profile's
+`STRATA_SELECT_SIMT=1` bypasses this route and remains faster.
+`STRATA_SCORES_THREAD=1` also keeps precedence. The switch defaults off.
+
 ## Exact long-context QSA selection (2026-11-12)
 
 `STRATA_TOPK_COMPACT=1` enables an optional CUDA selector inspired by

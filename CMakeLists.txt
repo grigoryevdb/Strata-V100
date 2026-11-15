@@ -483,6 +483,9 @@ if(STRATA_ENABLE_CUDA OR STRATA_ENABLE_HIP)
     target_link_libraries(qsa_scores_parity PRIVATE strata_kernels CUDA::cudart)
     add_test(NAME qsa_scores_parity COMMAND qsa_scores_parity)
     set_tests_properties(qsa_scores_parity PROPERTIES SKIP_RETURN_CODE 77 ENVIRONMENT "STRATA_SCORES_THREAD=1")
+    add_test(NAME qsa_scores_prompt_halve_parity COMMAND qsa_scores_parity)
+    set_tests_properties(qsa_scores_prompt_halve_parity PROPERTIES SKIP_RETURN_CODE 77
+      ENVIRONMENT "STRATA_SCORES_THREAD=0;STRATA_SCORES_PROMPT_HALVE=1")
   endif()
   # the QSA selection (block scores on the warp kernel and the tensor-core one, top-k): a GPU bench with a
   # scorer-vs-scorer comparison and an FP64 accuracy gate (synthetic, no model); the ctest runs a 32K context under a
