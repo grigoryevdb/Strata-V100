@@ -4,6 +4,31 @@ Strata's ready-made engine and the support matrix start at compute capability 7.
 engine compiled for it, through the experimental build that issue #236 added. It is **community-tested, not part of the
 supported cards**: no ready-made engine is published for it and the numbers below come from one machine.
 
+## Optional CUDA host-copy DMA (2026-11-15)
+
+`STRATA_KV_HOST_DMA=1` extends the existing HIP prompt-copy option to CUDA,
+adapted from [upstream `f0356cb`](https://github.com/Niko1221/Strata/commit/f0356cb25f80715ac6025182bdc9df7a74210f86).
+With `--kv-resident`, the prompt appends to its GPU staging pool, then copies
+the new blocks to pinned RAM by DMA instead of writing RAM from the GPU kernel.
+It covers INT8, FP16 and Q4_0 KV. Hybrid K8V4 keeps its existing writer.
+Leave the switch unset or set it to `0` for the old path.
+The engine default and the daily service profile are unchanged.
+
+Measured on two V100-PCIE-16GB cards at 175 W, CUDA 12.8, Ryzen 5 3600
+and 94 GiB RAM. For one layer's 8,192-token INT8 append, including the
+host copy, 30 interleaved CUDA-event samples after five warm-up pairs gave:
+
+| Card / PCIe link | Kernel writes to RAM | Staging plus DMA |
+| --- | ---: | ---: |
+| GPU0 / Gen3 x4 | 9.345 ms | 2.875 ms |
+| GPU1 / Gen3 x16 | 2.027 ms | 0.896 ms |
+
+All host bytes matched at 512, 2,048 and 8,192 tokens on both cards.
+The streaming parity test also checks partial pages and rejected-tail rewrites.
+These are **component gains, not whole-model speedups**. Real-source HTTP
+prompts of 2,048, 9,436 and 29,728 tokens showed no consistent prefill gain.
+The daily `--kv-grow` configuration does not use this path.
+
 ## Exact tiled prompt scoring (2026-11-14)
 
 `STRATA_SCORES_PROMPT_HALVE=1` enables an optional CUDA exact prompt scorer
