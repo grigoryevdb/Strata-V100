@@ -4,11 +4,33 @@ The technical side of Strata: every measured number, the API, images, all settin
 New here? Start with the [README](../README.md); installing step by step is in [INSTALL.md](INSTALL.md), the models in
 [MODELS.md](MODELS.md), common problems in [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
 
-> **On this page:** [Speed](#speed-measured) · [Other GPUs](#other-gpus-estimated) · [Which model?](#which-model) ·
-> [Requirements](#before-you-start) · [Windows](#windows) · [Linux](#linux) · [API](#using-it) ·
-> [MCP tools](#tools-from-mcp-servers) · [MCP server](#manage-strata-from-your-ai-assistant-mcp-server) ·
-> [Images](#images-vision) ·
-> [Troubleshooting](#troubleshooting) · [How it works](#how-it-works)
+This page is the measurement record. The complete reference for each setting is in its own page:
+[engine flags](ENGINE_FLAGS.md), [environment variables](ENVIRONMENT.md), [server options and
+endpoints](SERVER.md), [terminal commands](TERMINAL.md), and [performance tuning](TUNING.md). The
+[docs index](README.md) lists every page and its purpose.
+
+> **On this page**
+>
+> - **Changes:** [v0.1.36](#upstream-v0136-in-the-v100-fork) · [v0.1.39](#upstream-v0139-in-the-v100-fork) ·
+>   [Retained CPU, PLE and Volta changes](#retained-cpu-ple-and-volta-changes) ·
+>   [CUDA opt-in switches (0.1.45)](#cuda-opt-in-switches-measured-for-0145-rtx-3060-and-rtx-a4000-sm_86-all-off-unless-you-set-them)
+> - **Per card:** [RTX 30 and P100 defaults](#rtx-30-series-sm_86-and-tesla-p100-sm_60-bitwise-decode-switches-on-by-default) ·
+>   [Compute capability 12.0](#compute-capability-120-cards-faster-decode-bitwise-and-fused-prompt-experts-by-default)
+> - **Speed:** [Speed (measured)](#speed-measured) · [Other GPUs](#other-gpus-estimated)
+> - **Model and requirements:** [Which model](#which-model) · [Before you start](#before-you-start)
+> - **Setup:** [Windows](#windows) · [Linux](#linux) · [Sharing the GPU](#sharing-the-gpu-with-other-programs-optional)
+> - **API:** [Using it](#using-it) · [MCP tools](#tools-from-mcp-servers) ·
+>   [MCP server](#manage-strata-from-your-ai-assistant-mcp-server) · [Images](#images-vision)
+> - **Engine switches** (all opt-in unless the heading says otherwise):
+>   [CPU share](#short-prompts-the-cpu-shares-the-experts-on-by-default-on-one-nvidia-gpu-strata_prefill_cpu_share) ·
+>   [Tail skip](#missed-experts-in-a-verify-window-the-tail-is-skipped-on-by-default-on-cuda-strata_route_tail_skip) ·
+>   [Expert set cap](#a-verify-windows-expert-set-can-be-capped-opt-in-strata_verify_ecap) ·
+>   [PCIe share](#the-pcie-share-of-the-missed-experts-is-set-from-the-cpus-speed-cuda-single-gpu-no---pcie-frac) ·
+>   [Prompt chunk](#the-prompt-chunk-follows-the-hosts-memory-linux-file-tier-on-by-default-strata_prefill_host_plan0-turns-it-off) ·
+>   [More 0.1.41 switches](#more-opt-in-switches-measured-for-0141-all-off-unless-you-set-them) ·
+>   [Thread placement](#thread-placement---aux-cpus-linux-off-by-default) ·
+>   [Speed projection](#experimental-speed-projection-experimental-off-by-default)
+> - **Operations:** [Troubleshooting](#troubleshooting) · [How it works](#how-it-works) · [Credits and licenses](#credits-and-licenses)
 
 ---
 
@@ -2953,7 +2975,7 @@ the pairs in which the switched arm won). They are here so you can try them on y
   On HIP, gfx1100-gfx1102, gfx1150 and gfx1151 use 16-token WMMA chunks with FP16 operands and a fused output norm; other cards and short
   chunks keep the existing path. It changes rounding too (first-token KL against the default 0.006-0.007 on average, the same top
   token in 12 of 12 prompts); on a Radeon 8060S (gfx1151) the layer's recurrence is 1.6x faster and a 4K-128K prompt after a warm-up prompt 1.4-2.1%; see
-  [the HIP conditions and numerical checks](AMD_HIP.md#opt-in-chunked-prompt-gdn-on-gfx11).
+  [the HIP conditions and numerical checks](AMD_HIP.md).
 - **`STRATA_FS_SLOTS=N`: the Foresight swap space** (q8atnight, #1348): N VRAM slots per layer, refilled on a copy stream
   with the experts that just missed and with the ones the next layer's router predicts (`STRATA_FS_AHEAD=0` for the
   misses only), so that an expert the cache lacks can be computed on the GPU instead of by the CPU. The model's own router

@@ -366,6 +366,24 @@ The fork has also repaired CUDA configuration and linking for `sm_70`, maintaine
 
 For the full evidence and implementation scope, see [PR #1](https://github.com/jmnargi/Strata-V100/pull/1), [#2](https://github.com/jmnargi/Strata-V100/pull/2), [#5](https://github.com/jmnargi/Strata-V100/pull/5), [#6](https://github.com/jmnargi/Strata-V100/pull/6), [#11](https://github.com/jmnargi/Strata-V100/pull/11), [#12](https://github.com/jmnargi/Strata-V100/pull/12), [#15](https://github.com/jmnargi/Strata-V100/pull/15), [#16](https://github.com/jmnargi/Strata-V100/pull/16), and [#17](https://github.com/jmnargi/Strata-V100/pull/17). The results use different dates, builds, prompts, GPU placements, and protocols. They are historical measurements, not a single controlled before/after comparison or a guarantee of gains on every V100 system.
 
+## Documentation
+
+The [documentation index](docs/README.md) lists every page and its purpose. These pages are the
+reference:
+
+- [Engine flags](docs/ENGINE_FLAGS.md): every command-line option, its value and its default.
+- [Environment variables](docs/ENVIRONMENT.md): every variable that the engine, the server and the
+  terminal read.
+- [Server](docs/SERVER.md): server options, the run config keys and all API endpoints.
+- [Terminal](docs/TERMINAL.md): every `strata` command and subcommand.
+- [Tuning](docs/TUNING.md): the settings by goal, the optimizations, and the measured results.
+- [How it works](docs/HOW_IT_WORKS.md) and the [glossary](docs/GLOSSARY.md): the parts of the
+  engine and the terms that this documentation uses.
+- [Details](docs/DETAILS.md): the measurement record, the request formats and the settings history.
+
+The pages follow the [documentation style](docs/STYLE.md), which is ASD-STE100 (Simplified Technical
+English).
+
 ## Get started
 
 This fork tracks the upstream installation experience. For complete and current platform requirements, model choices, and options, see the [installation guide](docs/INSTALL.md), [model guide](docs/MODELS.md), and [upstream setup guide](docs/AI_SETUP.md).
