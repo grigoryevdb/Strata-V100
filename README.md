@@ -8,6 +8,24 @@ Strata is an open-source local runtime for [Qwen3.8-Flash-Next](https://huggingf
 
 [Upstream Strata](https://github.com/Niko1221/Strata) · [Issues](https://github.com/jmnargi/Strata-V100/issues) · [Pull requests](https://github.com/jmnargi/Strata-V100/pulls) · [Discussions](https://github.com/jmnargi/Strata-V100/discussions)
 
+**Languages:** [English](README.md) · [Deutsch](README.de.md) · [Español](README.es.md) · [Français](README.fr.md) · [日本語](README.ja.md) · [Português (Brasil)](README.pt-BR.md) · [简体中文](README.zh-CN.md)
+
+## Contents
+
+- [Models and quants that run here](#models-and-quants-that-run-here)
+- [What this fork focuses on](#what-this-fork-focuses-on)
+- [Documentation](#documentation)
+- [Release notes](#release-notes)
+- [V100 benchmark](#v100-benchmark)
+- [V100 performance work](#v100-performance-work)
+- [Other hardware](#other-hardware)
+- [Install and start](#install-and-start)
+- [Use Strata](#use-strata)
+- [Something went wrong](#something-went-wrong)
+- [Contributing](#contributing)
+- [Project history](#project-history)
+- [Credits and license](#credits-and-license)
+
 ## Models and quants that run here
 
 Strata runs **Qwen3.8-Flash-Next** from seven families of quantized releases, plus a smaller **Qwen3.6-35B-A3B**. Every
@@ -32,7 +50,6 @@ The NVFP4 rows need NVIDIA cards (RTX 50 cards multiply at FP4 width; older card
 precision), and the two QAD rows are prepared on your PC from the authors' safetensors — no quantized weights of theirs
 are redistributed here. The Gyro and trellis rows need engine 0.1.45.1 or newer, the Unsloth Q5_0-down rows 0.1.45.7.
 
-
 ## What this fork focuses on
 
 - **Tesla V100 / Volta support (`sm_70`)**: preserve normal V100 builds and runtime support. V100 builds use a CUDA 12.x toolkit; CUDA 13 does not compile `sm_70` code.
@@ -42,7 +59,27 @@ are redistributed here. The Gyro and trellis rows need engine 0.1.45.1 or newer,
 
 Support for V100 does not imply that every upstream feature or every other GPU configuration has been tested on V100. Check the relevant code, release notes, and measurement reports before relying on a hardware-specific feature.
 
-## Unsloth Dynamic v3.1 sets (1-4 bit) — 8 November 2026
+## Documentation
+
+The [documentation index](docs/README.md) lists every page and its purpose. These pages are the
+reference:
+
+- [Engine flags](docs/ENGINE_FLAGS.md): every command-line option, its value and its default.
+- [Environment variables](docs/ENVIRONMENT.md): every variable that the engine, the server and the
+  terminal read.
+- [Server](docs/SERVER.md): server options, the run config keys and all API endpoints.
+- [Terminal](docs/TERMINAL.md): every `strata` command and subcommand.
+- [Tuning](docs/TUNING.md): the settings by goal, the optimizations and the measured results.
+- [How it works](docs/HOW_IT_WORKS.md) and the [glossary](docs/GLOSSARY.md): the parts of the
+  engine and the terms that this documentation uses.
+- [Details](docs/DETAILS.md): the measurement record, the request formats and the settings history.
+
+The pages follow the [documentation style](docs/STYLE.md), which is ASD-STE100 (Simplified Technical
+English).
+
+## Release notes
+
+### Unsloth Dynamic v3.1 sets (1-4 bit) — 8 November 2026
 
 Resolves [#95](https://github.com/jmnargi/Strata-V100/issues/95): setup's `--family unsloth` menu used to stop at
 UD-IQ4_XS (about 4 bits). It now offers Unsloth's Dynamic v3.1 files as well, from ~1 to ~4 bits, at the revision
@@ -76,7 +113,7 @@ The five pinned files, their bytes and every other format are unchanged: only Q5
 (the dense Q5_0 path is `native_mmvq`, untouched), and their whole-expert error against the float reference moves from
 2.4-3.2e-2 to 1.25-1.30e-2.
 
-## Selected upstream v0.2.11 performance ports — 5 November 2026
+### Selected upstream v0.2.11 performance ports — 5 November 2026
 
 This update selectively ports upstream optimizations; it is not a full
 v0.2.11 merge. It adds faster trellis expert kernels, smaller prompt scratch
@@ -108,7 +145,7 @@ See the [V100 port report](docs/NVIDIA_V100.md#selected-upstream-0211-ports-gyro
 for individual measurements, option guards, numerical checks, build limits,
 and tested candidates that were not retained. No service defaults are changed.
 
-## Selected upstream sync — 19 October 2026
+### Selected upstream sync — 19 October 2026
 
 This branch imports shared CUDA engine and server changes from upstream
 commit `3d1fb480`. It keeps the fork's Volta kernels, pipeline K/V growth,
@@ -118,8 +155,7 @@ separate Metal, AMD, and Intel backend updates. See the
 Use CUDA 12.8 with `sm_70`. An imported option does not establish a V100
 performance gain.
 
-
-## Upstream v0.1.39 integration
+### Upstream v0.1.39 integration
 
 This update integrates [Strata v0.1.39](https://github.com/Niko1221/Strata/releases/tag/v0.1.39), including the intervening releases. It keeps the fork's V100 tensor-core experts, attention changes, asymmetric GPU split, and disk conversation cache.
 
@@ -153,7 +189,7 @@ Parallel slots at the 524,288-token context depend on the split and the memory l
 last stage; the measured fallback (requested 2, served one request at a time, configuration
 untouched) is described in [docs/BATCHING.md](docs/BATCHING.md).
 
-## Dual-V100 pipeline performance — 15 October 2026
+### Dual-V100 pipeline performance — 15 October 2026
 
 The measured service profile enables `--pipeline-windows 2` with GPU order
 `0,1` and layer split `16`. It uses two 16-GiB V100 cards at 175 W,
@@ -169,7 +205,7 @@ drains speculative work before growing the mapping and then resumes
 pipelining. The short-output speed measurements below did not exercise
 that boundary.
 
-### Fresh-prompt prefill through 32K
+#### Fresh-prompt prefill through 32K
 
 Each value is the median of three exact-token requests with no prompt reuse
 and a 16-token output cap. Prefill time excludes response generation.
@@ -185,7 +221,7 @@ Throughput is prompt tokens divided by median prefill time.
 Fresh-prompt prefill is approximately unchanged. These small differences
 do not establish a meaningful regression.
 
-### Conversation decode
+#### Conversation decode
 
 The separate HTTP comparison uses an 8,828-token initial prompt and six
 continuation turns. Context reaches approximately 11.9K tokens. Each value
@@ -218,7 +254,7 @@ for exact timings, build provenance, rejected trials, and reproduction
 commands. See the [service profile guide](docs/NVIDIA_V100.md#dual-pcie-pipeline-service-profile)
 before enabling the option on another installation.
 
-## TurboQuant KV cache — 25 October 2026
+### TurboQuant KV cache — 25 October 2026
 
 TurboQuant is an opt-in KV cache format. It rotates each 256-value head with a Hadamard transform, then
 quantizes the rotated values against a Lloyd-Max codebook. Each head keeps one FP16 norm. The widths are
@@ -255,7 +291,7 @@ general quality result.
 See the [full report](benchmarks/v100-turboquant-2026-10-25.md) and
 [details](docs/DETAILS.md#tesla-v100-fork-benchmark).
 
-## Gyro-L pair trellis on two V100 — 31 October 2026
+### Gyro-L pair trellis on two V100 — 31 October 2026
 
 This branch reads agentionai's `Qwen3.8-Flash-Next-Gyro-L-TQ3_0.gguf` (108,323,559,808 bytes, Hugging Face
 revision `05892758a67efff0895d23c6df10a6fdb6be8cf4`). Its routed experts are stored as the pair trellis types
@@ -321,10 +357,6 @@ The table below records a single-card run on one Tesla V100-PCIE-16GB using PCIe
 | 256K | 256,080 | 617.8 † | 36.8 | 84 °C |
 
 **Test setup:** Qwen3.8-Flash-Next Q2_0; one V100 only (GPU1, PCIe Gen3 x16); Ryzen 5 3600; 48 GB DDR4-3200; CUDA 12.8; 262,144-token context; int8 KV cache; automatic prefill; MTP with `--spec 8` and draft floor 0.70; paired expert variant; 700 MiB vision reserve. Each value is the median of three fresh, uncached requests (`reused=0`) with exactly 256 output tokens. Timings are from the engine's `/metrics` endpoint.
-- **Older graphics cards** (Tesla P40 / V100, GTX 10, Radeon VII / MI50, RX 6700 XT, RX 5500 XT): [Older GPUs](docs/OLDER_GPUS.md).
-- **Intel Arc**, built from source on Linux: [Intel Arc](docs/INTEL_ARC.md).
-- **AMD Ryzen AI Max (Strix Halo)**, built from source on Linux: [Strix Halo](docs/STRIX_HALO.md).
-- **Older processors without AVX2**: they work, but slowly. [Older CPUs](docs/INSTALL.md#older-cpus-experimental).
 
 Before each request, the passively cooled card idled for at least 120 seconds and reached 55 °C or below without software thermal slowdown for 15 seconds. The starting temperatures were 51–55 °C. All requests are included. The 128K and 256K prompts reached 84 °C and experienced software thermal slowdown during prompt processing, despite the cooled start; long runs can throttle. † indicates slowdown during the prompt.
 
@@ -366,25 +398,14 @@ The fork has also repaired CUDA configuration and linking for `sm_70`, maintaine
 
 For the full evidence and implementation scope, see [PR #1](https://github.com/jmnargi/Strata-V100/pull/1), [#2](https://github.com/jmnargi/Strata-V100/pull/2), [#5](https://github.com/jmnargi/Strata-V100/pull/5), [#6](https://github.com/jmnargi/Strata-V100/pull/6), [#11](https://github.com/jmnargi/Strata-V100/pull/11), [#12](https://github.com/jmnargi/Strata-V100/pull/12), [#15](https://github.com/jmnargi/Strata-V100/pull/15), [#16](https://github.com/jmnargi/Strata-V100/pull/16), and [#17](https://github.com/jmnargi/Strata-V100/pull/17). The results use different dates, builds, prompts, GPU placements, and protocols. They are historical measurements, not a single controlled before/after comparison or a guarantee of gains on every V100 system.
 
-## Documentation
+## Other hardware
 
-The [documentation index](docs/README.md) lists every page and its purpose. These pages are the
-reference:
+- **Older graphics cards** (Tesla P40 / V100, GTX 10, Radeon VII / MI50, RX 6700 XT, RX 5500 XT): [Older GPUs](docs/OLDER_GPUS.md).
+- **Intel Arc**, built from source on Linux: [Intel Arc](docs/INTEL_ARC.md).
+- **AMD Ryzen AI Max (Strix Halo)**, built from source on Linux: [Strix Halo](docs/STRIX_HALO.md).
+- **Older processors without AVX2**: they work, but slowly. [Older CPUs](docs/INSTALL.md#older-cpus-experimental).
 
-- [Engine flags](docs/ENGINE_FLAGS.md): every command-line option, its value and its default.
-- [Environment variables](docs/ENVIRONMENT.md): every variable that the engine, the server and the
-  terminal read.
-- [Server](docs/SERVER.md): server options, the run config keys and all API endpoints.
-- [Terminal](docs/TERMINAL.md): every `strata` command and subcommand.
-- [Tuning](docs/TUNING.md): the settings by goal, the optimizations, and the measured results.
-- [How it works](docs/HOW_IT_WORKS.md) and the [glossary](docs/GLOSSARY.md): the parts of the
-  engine and the terms that this documentation uses.
-- [Details](docs/DETAILS.md): the measurement record, the request formats and the settings history.
-
-The pages follow the [documentation style](docs/STYLE.md), which is ASD-STE100 (Simplified Technical
-English).
-
-## Get started
+## Install and start
 
 This fork tracks the upstream installation experience. For complete and current platform requirements, model choices, and options, see the [installation guide](docs/INSTALL.md), [model guide](docs/MODELS.md), and [upstream setup guide](docs/AI_SETUP.md).
 
@@ -458,6 +479,18 @@ How it behaves:
 - A text request never starts the encoder. An image request first tells the engine to hand the GPUs' VRAM back - one reserve per GPU, `[1700, 600]` on a layer split and `[1800]` on one GPU, override with `"vram_mib"` - then starts the encoder and encodes the picture while the engine is idle.
 - After `idle_s` seconds without an image request the encoder stops, and the expert caches grow back to their full size. Encoded images stay cached on disk, so sending the same picture again does not re-encode it.
 - Measured on this fork's two-V100 layer split: the caches hold **14,005** resident experts while the encoder is idle (12,688 with the encoder resident), a cold image request answered in **5.9 s**, and both caches returned to 14,005 after the encoder unloaded. See [details](docs/DETAILS.md).
+
+## Something went wrong
+
+The common problems and their fixes are in [TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md). That page covers
+the desktop app, the `strata` command and the installer. The full table of error messages is in
+[DETAILS.md](docs/DETAILS.md#troubleshooting).
+
+If the server starts but a request fails, run `strata doctor`. It reads the installed components and
+prints what is missing or out of date; see [TERMINAL.md](docs/TERMINAL.md#doctor).
+
+If a reply is slow rather than broken, read [TUNING.md](docs/TUNING.md). It gives the setting that
+matters for each goal, and the measured cost of each one.
 
 ## Contributing
 

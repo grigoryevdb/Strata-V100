@@ -1,7 +1,7 @@
 # Installing Strata
 
 Everything about installing, starting, updating and configuring Strata, on Windows, Linux and Mac, with an NVIDIA
-or an AMD graphics card or an Apple Silicon Mac. The short version is in the [README](../README.md#install). An AI
+or an AMD graphics card or an Apple Silicon Mac. The short version is in the [README](../README.md#install-and-start). An AI
 coding assistant can do all of this for you with [AI_SETUP.md](AI_SETUP.md).
 
 There are three ways to install it. Take the first one unless you have a reason not to:
@@ -25,7 +25,7 @@ There are three ways to install it. Take the first one unless you have a reason 
 | **RAM** | Enough for the size you pick ([which model](MODELS.md#pick-by-memory)); **64 GB** runs every size. A big GPU makes up for less RAM - the [low-RAM mode](MODELS.md#a-big-graphics-card-and-little-ram). |
 | **CPU** | x86-64 with AVX2 (any Intel/AMD desktop CPU from the last ~8 years). AVX-512 (Ryzen 7000/9000) is a bit faster. Older CPUs without AVX2 are experimental and slow: [Older CPUs](#older-cpus-experimental). |
 | **Disk** | The app and its engine take about 1-3 GB. ~70-80 GB free for the model, ~6 GB for the MTP layer (+1 GB with images). Q2_0 on an AVX-512 CPU also writes a one-time ~40 GB copy of its experts for the fast CPU kernel. On Linux with an AMD card, ROCm takes ~10 GB more when setup installs it. An NVMe SSD is strongly recommended: it makes the first start much faster. |
-| **OS** | Windows 10/11, Linux (Ubuntu 22.04/24.04 and Debian 12/13 get everything installed automatically; the app also runs on Fedora 44), or a Mac with Apple Silicon (M1 or newer) and macOS 15 or newer ([Mac](MAC.md)). |
+| **OS** | Windows 10/11, Linux (Ubuntu 22.04/24.04 and Debian 12/13 get everything installed automatically; the app also runs on Fedora 44), or a Mac with Apple Silicon (M1 or newer) and macOS 15 or newer ([the upstream Mac guide](https://github.com/Niko1221/Strata/blob/main/docs/MAC.md)). |
 | **Driver** | **NVIDIA:** a current driver, version 580 or newer ([nvidia.com/drivers](https://www.nvidia.com/drivers) or the NVIDIA App). **AMD:** on Linux the kernel's amdgpu driver (no ROCm install needed); on Windows a current AMD Software: Adrenalin Edition driver ([amd.com/support](https://www.amd.com/en/support)). |
 
 The driver is the only thing you install yourself. With the app, the engine is inside the installer. With the
@@ -57,7 +57,7 @@ The app is the easiest way. It has the engine inside, so there is nothing to bui
      FUSE you can still start it with `--appimage-extract-and-run` after the file name. The NVIDIA build needs
      driver 580 or newer.
    - **Mac:** the `.dmg`. Open it, drag Strata onto Applications, then open Strata from there. It needs Apple
-     Silicon and macOS 15 or newer. If macOS says the app is "damaged", the file is fine: see [MAC.md](MAC.md).
+     Silicon and macOS 15 or newer. If macOS says the app is "damaged", the file is fine: see [the upstream Mac guide](https://github.com/Niko1221/Strata/blob/main/docs/MAC.md).
 2. Start Strata. The first start is a little slower on Linux and Mac, because the engine inside the app is copied
    into your home folder.
 3. The first screen reads your PC and recommends a model that fits. Press the install button. The download is
@@ -105,7 +105,7 @@ strata launch --model q2_0 --yes --no-tui    # the same without questions (scrip
 
 `strata launch` downloads the engine for your graphics card (signed, and test-started before it is used) and the
 model, starts serving on `http://127.0.0.1:8080` and shows the monitor. It never opens a browser unless you add
-`--open`. Its flags and screens: [TERMINAL_LAUNCH.md](TERMINAL_LAUNCH.md).
+`--open`. Its flags and screens: [TERMINAL.md](TERMINAL.md).
 
 **Update:** `strata update --check` says what would change, `strata update` installs the new engine (it is test-started
 first and switched only if that works; the previous engine is kept), `strata components rollback` goes back. It
@@ -155,7 +155,7 @@ nix develop -c ./setup.sh
 On an Apple Silicon Mac with macOS 15 or newer, install Apple's Command Line Tools once (`xcode-select --install`),
 then run `./setup.sh` in the Strata folder. It builds the Mac (Metal) engine on your Mac and asks the same
 questions. The app and the Terminal do not build anything. All of it, and what fits which memory size, is in
-[MAC.md](MAC.md).
+[the upstream Mac guide](https://github.com/Niko1221/Strata/blob/main/docs/MAC.md).
 
 ## AMD cards
 
@@ -189,8 +189,8 @@ split pays only when no single card holds the model's experts ([AMD_HIP.md](AMD_
 
 Ready-made images for NVIDIA (CUDA 13 and CUDA 12), AMD (RX 9000 / R9700 and RX 7000) and Intel Arc cards, with the Terminal
 inside: `docker run` one command, the model downloads on the first start into a volume, nothing is compiled on your computer.
-Which image for which card, the commands, Docker Compose, the API key, updating and troubleshooting: [DOCKER.md](DOCKER.md).
-Building from source: `docker build -t strata:src .` (CUDA 13; [DOCKER.md](DOCKER.md#build-it-yourself)).
+Which image for which card, the commands, Docker Compose, the API key, updating and troubleshooting: [the upstream Docker guide](https://github.com/Niko1221/Strata/blob/main/docs/DOCKER.md).
+Building from source: `docker build -t strata:src .` (CUDA 13; [the upstream Docker guide](https://github.com/Niko1221/Strata/blob/main/docs/DOCKER.md#build-it-yourself)).
 
 ## Older CPUs (experimental)
 
@@ -227,7 +227,7 @@ any PC (to try it). Problems and results on real hardware are welcome as GitHub 
 
 **The Terminal:** `strata update --check`, then `strata update` (see [the Terminal](#the-terminal)). Add `--app` to
 download the app's installer too. Models and saved tuning presets are never downloaded, replaced or deleted by an
-update. How the signed update feed works: [packaging/UPDATES.md](../packaging/UPDATES.md). What Strata downloads and
+update. How the signed update feed works: [the upstream update-feed notes](https://github.com/Niko1221/Strata/blob/main/packaging/UPDATES.md). What Strata downloads and
 how it checks it: [SAFETY.md](SAFETY.md).
 
 **From source: `UPDATE.bat`** (Linux: `./update.sh`) updates Strata without starting the model - for when the GPU is busy with
@@ -300,7 +300,7 @@ NVIDIA cards for now. [What it measures](DETAILS.md#double-click-start-herebat).
 
 ## Options without questions
 
-For the Terminal, `strata launch --help` lists every flag; the most used are in [TERMINAL_LAUNCH.md](TERMINAL_LAUNCH.md). These are the options of the installer from source:
+For the Terminal, `strata launch --help` lists every flag; the most used are in [TERMINAL.md](TERMINAL.md). These are the options of the installer from source:
 
 ```
 START-HERE.bat --setup                          install another model, or change context / images

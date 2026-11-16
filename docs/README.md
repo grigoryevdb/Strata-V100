@@ -94,11 +94,15 @@ hardware in each table before you compare it with a run of your own.
 - [NVIDIA_V100.md](NVIDIA_V100.md) - the Volta build, the two-V100 service profiles, and their numbers.
 - [DETAILS.md](DETAILS.md) - the long measurement and settings record.
 - [benchmarks/](benchmarks/) and [../benchmarks/](../benchmarks/) - benchmark data and reports.
+- [../improvements/](../improvements/) - the upstream-sync and release selection records, from
+  v0.1.40.2 to 2026-10-19, with the changes that were taken and the ones that were left out.
 
 ## Conventions
 
-- The English pages are authoritative. [zh_CN/](zh_CN/) holds translations and can lag
-  behind.
+- The English pages are authoritative. The root README files (`README.md` and the six
+  translations) mirror each other one to one: the same sections, the same tables, the same
+  numbers, translated. [zh_CN/](zh_CN/) holds translations of the pages in this directory
+  and can lag behind them.
 - `--flag value` is an engine or server option. `NAME=value` is an environment variable.
   `+N tokens` or `tokens/s` is the measured value.
 - A number belongs to the hardware in its table. Do not compare a number from one table
