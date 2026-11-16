@@ -12,7 +12,7 @@ makers' compressions). It also runs a smaller model, [Qwen3.6-35B-A3B](#qwen36-3
 
 ## Pick by memory
 
-The tiers count RAM and VRAM (the graphics card's memory) together, the same as the [README](../README.md#the-other-sizes).
+The tiers count RAM and VRAM (the graphics card's memory) together, the same as the [README](../README.md#models-and-quants-that-run-here).
 `strata launch`, setup and the install tool of the MCP server pre-select by them; the desktop app does from 0.2.1. Every
 other size stays a choice. A PC with a card of 12 GB and 32 GB of RAM is in the 40 GB tier (32 + 12 = 44).
 
@@ -108,7 +108,7 @@ picture, nothing taken from the card) and on the graphics card from 24 GB (about
 picture). The rule is the same on NVIDIA and AMD cards. `--vision off` (or "No" in the app and in `strata launch`) turns
 pictures off; `--vision cpu` or `--vision gpu` picks the reader. On AMD, `strata-vision-hip` is the card's reader; if it
 cannot start, Strata uses the CPU reader by itself ([AMD_HIP.md](AMD_HIP.md)). The Mac app and the Mac Terminal have no
-picture reader yet ([MAC.md](MAC.md)), and neither does the Intel Arc engine ([INTEL.md](INTEL.md#not-done)). More: [Images](DETAILS.md#images-vision).
+picture reader yet ([the upstream Mac guide](https://github.com/Niko1221/Strata/blob/main/docs/MAC.md)), and neither does the Intel Arc engine ([INTEL.md](INTEL.md#not-done)). More: [Images](DETAILS.md#images-vision).
 
 ### Qwen3.8-Flash-Next
 

@@ -1,14 +1,50 @@
 # Strata-V100
 
-[English](README.md) · **简体中文**
-
-**[Strata](https://github.com/Niko1221/Strata) 的社区维护分支（fork），专注于 V100 支持。** 本分支让 NVIDIA Volta（`sm_70`）支持保持可用，在 Tesla V100 硬件上开发并实测性能改动，并定期合并上游改进，以获得 V100 之外的新特性和修复。
+**[Strata](https://github.com/Niko1221/Strata) 的社区维护分支，专注于 V100。** 本分支让 NVIDIA Volta（`sm_70`）支持保持可用，在 Tesla V100 硬件上开发并实测性能改动，并定期合并上游改进，以获得 V100 之外的新特性和修复。
 
 Strata 是 [Qwen3.8-Flash-Next](https://huggingface.co/Qwen/Qwen3.8-Flash-Next) 的开源本地运行时。它把 GPU、系统内存和存储组合起来，让这个大模型能在个人电脑上运行。本分支保留了 Strata 项目的全部内容：其他受支持的 NVIDIA 和 AMD 硬件、Web 界面、OpenAI 兼容 API、工具、图片输入以及上游特性同样重要。
 
 > **向 Niko（[@Niko1221](https://github.com/Niko1221)）和原版 Strata 的贡献者致以诚挚谢意。** 本项目建立在他们的工作之上：Strata 的模型运行时、架构、特性，以及让这个模型得以本地运行的所有工作，都来自上游项目。没有那个基础，就不会有 V100 分支。感谢你们让它成为可能，也感谢你们持续开发 Strata。
 
 [上游 Strata](https://github.com/Niko1221/Strata) · [Issues](https://github.com/jmnargi/Strata-V100/issues) · [Pull requests](https://github.com/jmnargi/Strata-V100/pulls) · [Discussions](https://github.com/jmnargi/Strata-V100/discussions)
+
+**语言：** [English](README.md) · [Deutsch](README.de.md) · [Español](README.es.md) · [Français](README.fr.md) · [日本語](README.ja.md) · [Português (Brasil)](README.pt-BR.md) · [简体中文](README.zh-CN.md)
+
+## 目录
+
+- [可在此运行的模型与量化](#可在此运行的模型与量化)
+- [本分支的关注点](#本分支的关注点)
+- [文档](#文档)
+- [发布说明](#发布说明)
+- [V100 基准](#v100-基准)
+- [V100 性能工作](#v100-性能工作)
+- [其他硬件](#其他硬件)
+- [安装与启动](#安装与启动)
+- [使用 Strata](#使用-strata)
+- [遇到问题时](#遇到问题时)
+- [贡献](#贡献)
+- [项目历史](#项目历史)
+- [致谢与许可证](#致谢与许可证)
+
+## 可在此运行的模型与量化
+
+Strata 运行 **Qwen3.8-Flash-Next**，来源为七个量化发布系列，另有一个较小的 **Qwen3.6-35B-A3B**。下表的每一行都由本分支的引擎和 setup 支持；最后一列说明哪些已在这台双 V100 机器上端到端运行过。规模、质量与各规模的速度见 [docs/zh_CN/MODELS.md](docs/zh_CN/MODELS.md)。
+
+| 模型 / 量化 | 路由专家 | 权重来源 | 下载 | 在此双 V100 上运行 |
+| --- | --- | --- | ---: | --- |
+| **NVFP4 — `local-inference-lab`（QAD）** | NVFP4，group 16；MXFP8 注意力与共享专家；NVFP4 n-gram 表 | [`local-inference-lab/Qwen3.8-Flash-Next-NVFP4`](https://huggingface.co/local-inference-lab/Qwen3.8-Flash-Next-NVFP4)，在你的电脑上转换（[NVFP4.md](docs/NVFP4.md#the-qad-distillation-local-inference-labqwen38-flash-next-nvfp4)） | 106 GB | 是 — 62.3 tokens/s decode |
+| **NVFP4 — NVIDIA，为 FP4 训练（`FP4-Local`，QAD）** | NVFP4，group 16（缩放值采用 NVIDIA 的 CSF 形式） | [`nvidia/Qwen3.8-Flash-Next-FP4-Local`](https://huggingface.co/nvidia/Qwen3.8-Flash-Next-FP4-Local)，在你的电脑上转换（[NVFP4.md](docs/zh_CN/NVFP4.md#nvidias-fp4-local-checkpoint)） | 102 GB（准备期间为 +110 GB） | 支持；未在此运行 |
+| **NVFP4 — NVIDIA 的版本** | NVFP4，group 16 | [`Maximilian228/Qwen3.8-Flash-Next-NVIDIA-NVFP4-Strata`](https://huggingface.co/Maximilian228/Qwen3.8-Flash-Next-NVIDIA-NVFP4-Strata)（现成模型包） | 128 GB | 支持；未在此运行 |
+| **NVFP4 — Strata 的版本** | NVFP4，group 16 | [`Maximilian228/Qwen3.8-Flash-Next-NVFP4-GPTQ-Strata`](https://huggingface.co/Maximilian228/Qwen3.8-Flash-Next-NVFP4-GPTQ-Strata)（现成模型包，GPTQ） | 128 GB | 支持；未在此运行 |
+| **Unsloth Dynamic v3.1（1-4 bit）** | UD-IQ1_M、UD-Q2_0、UD-IQ2_XS、UD-Q2_K_XL、UD-IQ3_XXS、UD-Q3_K_XL、UD-IQ4_XS-v31 | [`unsloth/Qwen3.8-Flash-Next-GGUF`](https://huggingface.co/unsloth/Qwen3.8-Flash-Next-GGUF)，2026-11-04 的修订版本 | 68-94 GB | 是 — UD-IQ4_XS-v31，81 tokens/s |
+| **Unsloth Dynamic（较早的修订版本）** | UD-IQ4_XS、UD-Q4_K_XL、UD-Q5_K_XL、UD-Q6_K_XL、Q8_0 | [`unsloth/Qwen3.8-Flash-Next-GGUF`](https://huggingface.co/unsloth/Qwen3.8-Flash-Next-GGUF) | 94-188 GB | 支持；未在此运行 |
+| **ISTA-DASLab 的 i-quants 与 Q2_0（2-3.5 bit）** | Q2_0、IQ2_XS、IQ3_XXS、IQ3_S | [`ISTA-DASLab/Qwen3.8-Flash-Next-GSQ-RCO-GGUF`](https://huggingface.co/ISTA-DASLab/Qwen3.8-Flash-Next-GSQ-RCO-GGUF) | 66-84 GB | 是 — IQ3_S，较早的日常配置 |
+| **Gyro（agentionai），trellis** | Gyro-S TQ1_0、Gyro-M TQ2_0（pair trellis） | [`agentionai/Qwen3.8-Flash-Next-Gyro-GGUF`](https://huggingface.co/agentionai/Qwen3.8-Flash-Next-Gyro-GGUF)（[GYRO.md](docs/zh_CN/GYRO.md)） | 58.5 / 92 GB | 是 — Gyro-M，约 70 tokens/s |
+| **Coder（ISTA-DASLab），专家数量减半** | IQ1_M、IQ2_S-IQ4_XS，与 IQ3_S 类似 | [`ISTA-DASLab/Qwen3.8-Flash-Next-GSQ-RCO-Coder-GGUF`](https://huggingface.co/ISTA-DASLab/Qwen3.8-Flash-Next-GSQ-RCO-Coder-GGUF) | 58 GB | 支持；未在此运行 |
+| **OrcaRouter Uncensored** | IQ3_XXS | `OrcaRouter` 的 Flash-Next Uncensored（[ORCA.md](docs/zh_CN/ORCA.md)；手动打包步骤，不是安装程序选项） | 84 GB | 支持；未在此运行 |
+| **Qwen3.6-35B-A3B**（较小的模型） | Unsloth 的 UD-Q4_K_XL、UD-Q6_K_XL 和 Q8_0，带 MTP 草稿层 | [`unsloth/Qwen3.6-35B-A3B-MTP-GGUF`](https://huggingface.co/unsloth/Qwen3.6-35B-A3B-MTP-GGUF)（[MODELS.md](docs/zh_CN/MODELS.md#qwen36-35b-a3b)） | 23-38 GB | 支持；未在此运行 |
+
+NVFP4 各行需要 NVIDIA 显卡（RTX 50 显卡以 FP4 宽度相乘；较老的显卡，包括 V100，以 8-bit 精度相乘）。两个 QAD 行在你的电脑上由作者的 safetensors 准备，这里不再分发他们的量化权重。Gyro 和 trellis 各行需要 0.1.45.1 或更新的引擎，Unsloth 的 Q5_0 down 各行需要 0.1.45.7。
 
 ## 本分支的关注点
 
@@ -19,11 +55,65 @@ Strata 是 [Qwen3.8-Flash-Next](https://huggingface.co/Qwen/Qwen3.8-Flash-Next) 
 
 对 V100 的支持不意味着每个上游特性或每种其他 GPU 配置都在 V100 上测过。在依赖某个硬件相关特性之前，请先查看相关代码、发布说明和测量报告。
 
-## 上游选择性同步 — 2026 年 10 月 19 日
+## 文档
 
-本分支从上游提交 `3d1fb480` 引入了共享的 CUDA 引擎和服务器改动，保留了本分支的 Volta 内核、流水线 K/V 增长和会话缓存改动，排除了无关的桌面安装包以及独立的 Metal、AMD、Intel 后端更新。见[同步范围](improvements/RELEASE-2026-10-19-V100.md)。`sm_70` 请使用 CUDA 12.8。引入某个上游选项并不代表它在 V100 上有性能收益。
+[文档索引](docs/README.md)列出了每个页面及其用途。以下页面是参考：
 
-## 上游 v0.1.39 整合
+- [引擎标志](docs/ENGINE_FLAGS.md)：每个命令行选项、它的取值和默认值。
+- [环境变量](docs/ENVIRONMENT.md)：引擎、服务器和终端读取的每个变量。
+- [服务器](docs/SERVER.md)：服务器选项、运行配置键和全部 API 端点。
+- [终端](docs/TERMINAL.md)：每个 `strata` 命令和子命令。
+- [调优](docs/TUNING.md)：按目标列出的设置、各项优化和实测结果。
+- [工作原理](docs/zh_CN/HOW_IT_WORKS.md)和[术语表](docs/GLOSSARY.md)：引擎的各个部分，以及本文档使用的术语。
+- [详细说明](docs/zh_CN/DETAILS.md)：测量记录、请求格式和设置历史。
+
+这些页面遵循[文档风格](docs/STYLE.md)，即 ASD-STE100（简化技术英语）。
+
+## 发布说明
+
+### Unsloth Dynamic v3.1 量化集（1-4 bit）—— 2026 年 11 月 8 日
+
+解决 [#95](https://github.com/jmnargi/Strata-V100/issues/95)：setup 的 `--family unsloth` 菜单以前停在 UD-IQ4_XS（约 4 bit）。现在它也提供 Unsloth 的 Dynamic v3.1 文件，范围约 1 到 4 bit，采用 Unsloth 于 2026-11-04 发布的修订版本（提交 `d9620119`）：
+
+| 规模 | 下载 | 路由专家 | 全部专家都在内存时的 RAM | 备注 |
+| --- | ---: | ---: | ---: | --- |
+| UD-IQ1_M | 68.0 GB | 32.4 GiB | ~48 GB | 最小；在需要仔细或长时间处理的任务上最弱 |
+| UD-Q2_0 | 70.5 GB | 34.8 GiB | ~51 GB | Q2_0 专家，与最快的 2-bit 打包相同 |
+| UD-IQ2_XS | 75.8 GB | 39.4 GiB | ~55 GB | 1 层带 Q5_0 down |
+| UD-Q2_K_XL | 79.6 GB | 42.8 GiB | ~59 GB | 1 层带 Q5_0 down |
+| UD-IQ3_XXS | 83.6 GB | 46.8 GiB | ~63 GB | 没有 Q5_0 |
+| UD-Q3_K_XL | 89.5 GB | 52.3 GiB | ~68 GB | 20 层带 Q5_0 down |
+| UD-IQ4_XS-v31 | 93.7 GB | 56.2 GiB | ~72 GB | 33 层带 Q5_0 down；有独立的目录名称，因为它在 Hub 上的文件名是 UD-IQ4_XS |
+
+此前已提供的五个文件（UD-IQ4_XS、UD-Q4_K_XL、UD-Q5_K_XL、UD-Q6_K_XL、Q8_0）仍固定在上一个提交。UD-Q4_K_XL 在新提交下的第二种布局（四个分片，n-gram 表在最后）可从磁盘上已有的文件接受。UD-IQ1_S 仍被拒绝：它在一层里混用了两种专家格式。
+
+为此需要的引擎工作：Q5_0 专家点积。它按权重计的 -16 偏移曾作用在原始激活之和上（llama.cpp 的 CUDA 形式），因此 down 投影为 Q5_0 的层，每个专家的精度比其他任何 down 格式低 2-3%。现在它改为乘上量化后的激活之和，与 Q5_1、Q4_0 路径以及 ggml-cpu 一致（CUDA 与 SYCL）。在本机用合成专家一致性测试实测（`native_expert_parity --synthetic`，IQ2_XXS / IQ2_S / IQ2_XS / IQ3_XXS / IQ4_XS 的 gate-up 配 Q5_0 down，相对浮点参考的 L1 误差）：**修改前 2.40e-2 .. 3.18e-2，修改后 1.25e-2 .. 1.30e-2**，与相同种子下 IQ4_NL 和 Q2_0 down（1.29e-2 .. 1.31e-2）相同。分组专家启动与窗口前的启动保持逐位相同（`native_grouped_parity`：每种 gate/up 格式都加入 Q5_0，以及这些文件使用的 Flash-Next 形状，0 次失败）。引擎版本：0.1.45.7；对这七个量化集，setup 会在下载任何内容之前拒绝更老的引擎。
+
+五个固定文件、它们的字节数和其他所有格式均未改变：只有 Q5_0 *专家* 权重读取该内核（dense Q5_0 路径是 `native_mmvq`，未改动），它们相对浮点参考的整专家误差从 2.4-3.2e-2 变为 1.25-1.30e-2。
+
+### 选定的上游 v0.2.11 性能移植 —— 2026 年 11 月 5 日
+
+本次更新有选择地移植上游优化；它不是完整的 v0.2.11 合并。它新增更快的 trellis 专家内核、更小的提示词暂存缓冲区、更少的 PLE 磁盘读取器分配，以及一项 Linux CPU/CUDA 零自旋修复。引擎版本仍为 0.1.45.6。
+
+**在本分支的双 V100 机器上实测：** 两张 V100-PCIE-16GB（175 W，GPU0 为 Gen3 x4，GPU1 为 x16）、Ryzen 5 3600，以及 Gyro-M abliterated Huihui TQ2_0。该配置使用切分 16、两个流水线窗口、MTP 4、int8 KV，以及 YaRN 2 的 524,288 token 上下文。
+
+| 提示词 token 数 | 对照组提示词时间 | 分组暂存 + 关闭 WMMA |
+| ---: | ---: | ---: |
+| 2,048 | 2,360.8 ms | 2,214.3 ms |
+| 8,192 | 6,932.7 ms | 6,541.0 ms |
+| 32,768 | 18,008.6 ms | 17,636.7 ms |
+
+这些是冷启动、交错 A-B-A-B 运行的平均值，每个长度和每个实验组四个请求。两组都已包含 trellis、HC 和 PLE 移植。这不是每个上下文长度都实测到的增益，也不是整请求速度的保证。
+
+实测的可选组合是 `STRATA_TQ_SUB8=1 STRATA_EXPERT_PAIR=0 STRATA_PF_HC_REGION=1 STRATA_PF_GROUP_SCRATCH=1 STRATA_PF_WMMA=0`。分组暂存可能改变浮点舍入。PLE 分配改动不需要标志。零自旋修复在 `STRATA_POOL_SPIN_US=0` 时生效；它不能证明在日常设置 100 下也有节省。
+
+各项测量、选项保护、数值检查、构建限制和未保留的测试候选见 [V100 移植报告](docs/NVIDIA_V100.md#selected-upstream-0211-ports-gyro-m-2026-11-05)。服务默认值没有改变。
+
+### 选定的上游同步 —— 2026 年 10 月 19 日
+
+本分支从上游提交 `3d1fb480` 引入了共享的 CUDA 引擎和服务器改动。它保留了本分支的 Volta 内核、流水线 K/V 增长和会话缓存改动。它排除了无关的桌面安装包以及独立的 Metal、AMD、Intel 后端更新。见[同步范围](improvements/RELEASE-2026-10-19-V100.md)。`sm_70` 请使用 CUDA 12.8。引入某个上游选项并不代表它在 V100 上有性能收益。
+
+### 上游 v0.1.39 整合
 
 本次更新整合了 [Strata v0.1.39](https://github.com/Niko1221/Strata/releases/tag/v0.1.39)（含其间的各版本），保留本分支的 V100 tensor-core 专家、注意力改动、非对称 GPU 切分和磁盘会话缓存。
 
@@ -44,15 +134,15 @@ V100 需要 CUDA 12.x 和包含 `sm_70` 的构建。不要在 V100 上安装 CUD
 
 每个数值是两个全新请求（`reused=0`）的中位数。增益很小；每个长度两次重复不构成统计结论。六次配对请求的首 token 全部与基线一致。不声称完整回复完全相同：自适应专家层在整合后的构建上把不同的专家组合留在 GPU 和 CPU 上，两条路径的舍入不同。不声称 decode 或质量有任何变化。这些是最终构建的实测值（引擎 SHA-256 `e9ad337a…`），完整数据见[完整报告](benchmarks/v100-q2_0-upstream-v0139-2026-10-04.md)。
 
-524,288 token 上下文下的并行槽位取决于切分方式和最后一级剩余的显存；实测的回退行为（请求 2 个槽位、实际一次服务一个请求、配置不动）见 [docs/BATCHING.md](docs/zh_CN/BATCHING.md)。
+524,288 token 上下文下的并行槽位取决于切分方式和最后一级剩余的显存；实测的回退行为（请求 2 个槽位、实际一次服务一个请求、配置不动）见 [docs/zh_CN/BATCHING.md](docs/zh_CN/BATCHING.md)。
 
-## 双 V100 流水线性能 — 2026 年 10 月 15 日
+### 双 V100 流水线性能 —— 2026 年 10 月 15 日
 
 实测服务配置启用 `--pipeline-windows 2`，GPU 顺序 `0,1`，层切分 `16`。使用两张 16 GiB 的 V100（175 W）、Ryzen 5 3600、原生 IQ3_S 混合格式模型、int8 KV，以及 `--spec 8` 的 MTP。配置的上下文容量仍为 524,288 token。实测的最大提示为 32,768 token。
 
 **长回复安全性：** 把本配置与 `STRATA_KV_GROW=1` 组合使用时，请使用包含[流水线 KV 增长修复](benchmarks/v100-pipeline-kv-growth-fix-2026-10-16.md)的构建。更早的流水线循环在长回复期间可能访问未映射的 KV 单元。修复会在扩展映射之前排空投机工作，然后再恢复流水线。下面短输出的速度测量没有触及该边界。
 
-### 全新提示的 prefill（至 32K）
+#### 全新提示词的 prefill（至 32K）
 
 每个数值是三个精确 token 数请求的中位数，无提示复用，输出上限 16 token。prefill 时间不含回复生成。吞吐量为提示 token 数除以 prefill 时间中位数。
 
@@ -63,9 +153,9 @@ V100 需要 CUDA 12.x 和包含 `sm_70` 的构建。不要在 V100 上安装 CUD
 | 16,384 | 8.828 s | 8.857 s | 1,855.9 | 1,849.8 | −0.33% |
 | 32,768 | 15.668 s | 15.677 s | 2,091.4 | 2,090.2 | −0.06% |
 
-全新提示的 prefill 基本不变。这些微小差异不足以说明存在有意义的回退。
+全新提示词的 prefill 基本不变。这些微小差异不足以说明存在有意义的回退。
 
-### 多轮对话 decode
+#### 多轮对话 decode
 
 独立的 HTTP 对比使用 8,828 token 的初始提示和六轮续写，上下文达到约 11.9K token。每个数值是四个请求的中位数，交替轮次反转两臂顺序，输出上限 256 token。新增提示 token 指该轮实际处理的 token 数，不是上下文总大小。
 
@@ -84,6 +174,56 @@ V100 需要 CUDA 12.x 和包含 `sm_70` 的构建。不要在 V100 上安装 CUD
 
 精确计时、构建来源、被否决的试验和复现命令见[评估报告](benchmarks/v100-upstream-pr-evaluation-2026-10-15.md)。在别的安装上启用该选项之前，先看[服务配置指南](docs/zh_CN/NVIDIA_V100.md#dual-pcie-pipeline-service-profile)。
 
+### TurboQuant KV 缓存 —— 2026 年 10 月 25 日
+
+TurboQuant 是一种可选启用的 KV 缓存格式。它用 Hadamard 变换旋转每个 256 值 head，然后按 Lloyd-Max 码本量化旋转后的值。每个 head 保留一个 FP16 范数。宽度为每个值 3、4、6 和 8 bit。拟合只采用最小平方误差；此版本没有 QJL 残差。
+
+使用 `--kv tq6`（或 `tq3`、`tq4`、`tq8`）。该缓存只常驻：它留在显存中，没有主机副本，`--kv-resident` 会被拒绝。MTP 草稿层保留其 INT8 缓存。Setup 不提供这些取值。没有任何一项是默认值，日常服务仍使用 int8。
+
+在配置的 524,288 token 容量下，模型的 12 个注意力层对应的 KV 缓存为：
+
+| `--kv` | 每单元字节数，单层 | 满容量 KV，12 层 | 相对 int8 的变化 |
+| --- | ---: | ---: | ---: |
+| int8 | 1,056 | 6.1875 GiB | — |
+| tq8 | 1,032 | 6.046875 GiB | −0.14 GiB |
+| tq6 | 776 | 4.546875 GiB | −1.64 GiB |
+| tq4 | 520 | 3.046875 GiB | −3.14 GiB |
+| tq3 | 392 | 2.296875 GiB | −3.89 GiB |
+
+tq6 的主要节省在满容量时为 1.64 GiB。这些是计算出的容量，不是实测的 `nvidia-smi` 下降值：专家缓存会占用腾出的显存，因此 GPU 总内存仍接近 15,600 MiB。
+
+V100 提示词读取器是第二个可选启用项：在 sm_70 上设置 `STRATA_PROMPT_ATTN_TQ=1`。它为提示词路径解码压缩 tile；不设置或设为 `0` 时保留 decode 注意力回退路径。它不改变 KV 字节数。
+
+在两张 175 W 的 Tesla V100 16 GB 上实测，模型为 IQ3_S，使用 `--spec 4`、`--layer-split 16`、`--pipeline-windows 2`，冷启动，输出上限 2,048 token，每个长度每个实验组运行一次。tq6 组开启了提示词读取器。在 32,768 提示词 token 时，tq6 的 prefill 为 1,687 tokens/s，int8 为 2,117 tokens/s；decode 为 120.2 tokens/s，对照为 125.5 tokens/s。开启读取器后，tq6 的 51,746 token 请求实际耗时从 40.3–40.4 s 降到 31.7–31.9 s，仍慢于 int8 的 25.8 s。这些测量没有显示速度增益。针对性查找（needle test）在两组中都于 122,289 提示词 token 范围内找到 15 个中的 15 个单元；这不是普遍的质量结论。
+
+见[完整报告](benchmarks/v100-turboquant-2026-10-25.md) 和[详细说明](docs/zh_CN/DETAILS.md#tesla-v100-fork-benchmark)。
+
+### 双 V100 上的 Gyro-L pair trellis —— 2026 年 10 月 31 日
+
+本分支读取 agentionai 的 `Qwen3.8-Flash-Next-Gyro-L-TQ3_0.gguf`（108,323,559,808 字节，Hugging Face 修订版本 `05892758a67efff0895d23c6df10a6fdb6be8cf4`）。它的路由专家以 pair trellis 类型 TQP5、TQP6 和 TQP7（ggml 类型 147 到 149）存储在 Hadamard 旋转基中。打包步骤（`tools/iq_pack.py --compat-bf16`）和内核见 [docs/zh_CN/GYRO.md](docs/zh_CN/GYRO.md)。支持 CPU 和 CUDA；Metal 和 SYCL 没有 pair-trellis 内核。这需要 0.1.45.6 或更新的引擎。
+
+必须先修复两个引擎缺陷。专家内核本身已经与作者的 ggml 逐位一致：
+
+- **decode 窗口丢失了旋转。** 对于折叠打包（folded pack），窗口旋转了专家输入，随后在专家读取之前用未旋转的副本覆盖了该旋转副本，因此每个 decode token 上 gate/up 投影都在错误的基中运行。单次输出看起来合理，随后开始循环；服务器从第一个 token 起就是错的。窗口现在为每层保留一个“镜像已写入”标记。
+- **层切分的提示词辅助器**（可选启用）只旋转了自己的 SwiGLU 输出，并把一个组的行写入按该阶段 WMMA tile 布局的缓冲区。它现在旋转传给它的输入，并拥有自己的 H。
+
+在本分支的双卡机器上实测：两张 Tesla V100-PCIE-16GB（GPU 0 走 PCIe Gen3 x4，GPU 1 走 x16），175 W，Ryzen 5 3600，层切分 14，`--spec 4 --spec-min-p 0.70`，int8 KV 并启用 KV 增长，`--pipeline-windows 2`，262,144 token 上下文，使用服务自身的环境，交错重复运行：
+
+| 提示词 token 数 | Prefill (tokens/s) |
+| ---: | ---: |
+| 2,328 | 632 |
+| 8,199 | 1,036-1,084 |
+| 16,371 | 1,344-1,411 |
+| 32,679 | 1,597-1,642 |
+
+在 2K 到 32K 上下文下，回复的 decode 为 68 到 75 tokens/s（重复 520 token 回复的中位数）；切分点不会把它改变到超出运行间噪声的程度。一次读取受限于不在显存中的专家：对 2.3K token 的读取（层切分 16 的配置），x16 卡通过 PCIe 流式读取 15.01 GiB，而两个阶段依次运行，因此 x4 卡在每次读取中约空闲 700 ms。
+
+该模型包通过 OpenAI 兼容 API 提供服务：对首都问题回答“Paris”，一个复用了 86 个提示词 token 的续问轮次，一个代码请求，一次 `get_weather` 工具调用以及来自工具结果的正确回答，还有一个根据段落回答的 442 token 段落问题。
+
+**层切分 14 而不是 16。** x4 卡上十四层、x16 卡上 34 层时，2.3K token 的读取快 7.9%（632 对 586 tokens/s），8.2K 时快 6%，16.3K 时相同，32.7K 时慢 1.5%。15 和 13 介于两者之间；20 在 2.3K 时慢 23%，8.2K 时慢 13%。智能体轮次的时间主要花在一次读取上，因此本配置使用 14。
+
+**在这台双卡机器上实测过但没有收益的设置：** `--spec 6` 和 `--spec 8`、`--spec-min-p 0.50` 和 `0.85`、固定的 `STRATA_PREFILL_CPU_SHARE`、高于 6,144 的 `STRATA_PREFILL_CPU_SHARE_MAX`、`--prefill-pipe`、`--max-context 131072`、`STRATA_HC_Q8=1`，以及更大的 `--vram-reserve-mib`。提示词辅助器本身在这里更慢（2.3K 时 484 对 583 tokens/s）：它只能接管第一阶段的专家，而在这台机器上该阶段是 x4 卡，一次读取移动 16.8 GiB，其中该卡流式读取 1.77 GiB。`--mtp` 和默认的 `STRATA_ROUTE_TAIL_SKIP=7` 值得保留：没有它们，decode 降到 35.5 和 48 tokens/s。
+
 ## V100 基准
 
 下表记录的是单张 Tesla V100-PCIE-16GB 走 PCIe Gen3 x16 的单卡运行。测试机上还有第二张走 PCIe Gen3 x4 的 V100，本次未使用。双卡系统或两条完整宽度链路的机器结果可能不同，可能更好。这是一次可复现的测量，不是对其他系统速度的承诺。
@@ -100,16 +240,12 @@ V100 需要 CUDA 12.x 和包含 `sm_70` 的构建。不要在 V100 上安装 CUD
 | 256K | 256,080 | 617.8 † | 36.8 | 84 °C |
 
 **测试设置：** Qwen3.8-Flash-Next Q2_0；仅一张 V100（GPU1，PCIe Gen3 x16）；Ryzen 5 3600；48 GB DDR4-3200；CUDA 12.8；262,144 token 上下文；int8 KV 缓存；自动 prefill；MTP `--spec 8`、draft floor 0.70；配对专家变体；700 MiB 视觉预留。每个数值是三个全新、无缓存请求（`reused=0`）恰好输出 256 token 的中位数。计时取自引擎的 `/metrics` 端点。
-- **较老的显卡**（Tesla P40 / V100、GTX 10、Radeon VII / MI50、RX 6700 XT、RX 5500 XT）：[较老的 GPU](docs/zh_CN/OLDER_GPUS.md)。
-- **Intel Arc**，在 Linux 上从源码构建：[Intel Arc](docs/zh_CN/INTEL_ARC.md)。
-- **AMD Ryzen AI Max（Strix Halo）**，在 Linux 上从源码构建：[Strix Halo](docs/zh_CN/STRIX_HALO.md)。
-- **不支持 AVX2 的老处理器**：能用，但很慢。[较老的 CPU](docs/zh_CN/INSTALL.md#older-cpus-experimental)。
 
 每次请求前，被动散热的显卡空闲至少 120 秒，并在没有软件热降频的情况下 15 秒内降到 55 °C 以下。起始温度为 51–55 °C。所有请求都计入。128K 和 256K 提示在提示处理期间达到 84 °C 并出现软件热降频，尽管起始温度已冷却；长时间运行可能降频。† 表示提示期间出现降频。
 
 测量于 2026-10-02。引擎：本分支版本 0.1.31，构建提交 `78417ea`（SHA-256 `512b1f25d60479a2ddb66fcf1ddca5407963e45378a3c8a463413ad159edae17`）。该基准记录于后来的上游 v0.1.36 整合和 V100 注意力 PR 之前，不是对当前 `main` 构建的测量。历史表格按其原始出处保留，不要把它当作与更早表格或当前构建的受控对比。
 
-原始数据：[`summary.json`](bench/results/2026-10-02-v100-single-cooled/summary.json)、[`protocol.json`](bench/results/2026-10-02-v100-single-cooled/protocol.json)、[`matrix.json`](bench/results/2026-10-02-v100-single-cooled/matrix.json)、[`completed-requests.json`](bench/results/2026-10-02-v100-single-cooled/completed-requests.json) 和 [GPU 遥测](bench/results/2026-10-02-v100-single-cooled/gpu.csv)。完整方法与历史见 [docs/DETAILS.md#tesla-v100-fork-benchmark](docs/zh_CN/DETAILS.md#tesla-v100-fork-benchmark)，基准说明见 [benchmarks/README.md](benchmarks/README.md)，V100 性能报告见 [benchmarks/](benchmarks/)。
+原始数据：[`summary.json`](bench/results/2026-10-02-v100-single-cooled/summary.json)、[`protocol.json`](bench/results/2026-10-02-v100-single-cooled/protocol.json)、[`matrix.json`](bench/results/2026-10-02-v100-single-cooled/matrix.json)、[`completed-requests.json`](bench/results/2026-10-02-v100-single-cooled/completed-requests.json) 和 [GPU 遥测](bench/results/2026-10-02-v100-single-cooled/gpu.csv)。完整方法与历史见 [docs/zh_CN/DETAILS.md](docs/zh_CN/DETAILS.md#tesla-v100-fork-benchmark)，基准说明见 [benchmarks/README.md](benchmarks/README.md)，V100 性能报告见 [benchmarks/](benchmarks/)。
 
 近期的 V100 pull request 包含实测的内核级改动，并在端到端增益未确立时明确说明。例如，从上游 PR #600 移植的提示注意力在其测量形状上报告 int8 注意力内核时间减少 27.9%，而模型 prefill 变化在所报各次运行中为 +1.3% 到 +3.0%；它没有确立可靠的 decode 增益。对比结果前先读[完整报告](benchmarks/v100-q2_0-pr600-2026-10-03.md)。
 
@@ -145,7 +281,14 @@ V100 的工作覆盖提示路径、decode 路径、内存使用、存储读取�
 
 完整证据和实现范围见 [PR #1](https://github.com/jmnargi/Strata-V100/pull/1)、[#2](https://github.com/jmnargi/Strata-V100/pull/2)、[#5](https://github.com/jmnargi/Strata-V100/pull/5)、[#6](https://github.com/jmnargi/Strata-V100/pull/6)、[#11](https://github.com/jmnargi/Strata-V100/pull/11)、[#12](https://github.com/jmnargi/Strata-V100/pull/12)、[#15](https://github.com/jmnargi/Strata-V100/pull/15)、[#16](https://github.com/jmnargi/Strata-V100/pull/16) 和 [#17](https://github.com/jmnargi/Strata-V100/pull/17)。这些结果使用不同的日期、构建、提示、GPU 位置和协议。它们是历史测量，不是单一的受控前后对比，也不保证在每个 V100 系统上都有增益。
 
-## 开始使用
+## 其他硬件
+
+- **较老的显卡**（Tesla P40 / V100、GTX 10、Radeon VII / MI50、RX 6700 XT、RX 5500 XT）：[较老的 GPU](docs/zh_CN/OLDER_GPUS.md)。
+- **Intel Arc**，在 Linux 上从源码构建：[Intel Arc](docs/zh_CN/INTEL_ARC.md)。
+- **AMD Ryzen AI Max（Strix Halo）**，在 Linux 上从源码构建：[Strix Halo](docs/zh_CN/STRIX_HALO.md)。
+- **不支持 AVX2 的老处理器**：能用，但很慢。[较老的 CPU](docs/zh_CN/INSTALL.md#older-cpus-experimental)。
+
+## 安装与启动
 
 本分支跟随上游的安装体验。完整且最新的平台要求、模型选择和选项见[安装指南](docs/zh_CN/INSTALL.md)、[模型指南](docs/zh_CN/MODELS.md)和[上游 AI 安装指南](docs/zh_CN/AI_SETUP.md)。
 
@@ -194,9 +337,9 @@ L2 归档在恢复后仍然可用。当字节预算和物理内存下限允许�
 
 #### V100 实测结果
 
-在本分支的双 V100 层切分配置上，从 25 GiB NVMe 缓存恢复一个 33,725 token 的会话，读取耗时 1,614.6 ms，恢复耗时 315.8 ms。完整的恢复提示阶段（含 22 个新 token）耗时 3,015.1 ms。冷读同样 33,725 token 前缀耗时 20,332.7 ms。对恢复的请求这是 **6.74 倍加速**和 **85.2% 的提示延迟削减**。943.6 MiB 的记录在两张 GPU 上都恢复了位级一致的主模型状态和相同输出。重启恢复通过位级一致性验证，损坏记录回退产生匹配的输出。见[基准报告](benchmarks/v100-l3-conversation-cache-2026-10-03.md)。
+在本分支的双 V100 层切分配置上，从 25 GiB NVMe 缓存恢复一个 33,725 token 的会话，读取耗时 1,614.6 ms，恢复耗时 315.8 ms。完整的恢复提示阶段（含 22 个新 token）耗时 3,015.1 ms。冷读同样 33,725 token 前缀耗时 20,332.7 ms。对恢复的请求这是 **6.74x 加速**和 **85.2% 的提示延迟削减**。943.6 MiB 的记录在两张 GPU 上都恢复了位级一致的主模型状态和相同输出。重启恢复通过位级一致性验证，损坏记录回退产生匹配的输出。见[基准报告](benchmarks/v100-l3-conversation-cache-2026-10-03.md)。
 
-在本分支的双 V100 层切分机器上（Qwen3.8-Flash-Next Q2_0，int8 KV）：两个会话通过一个临时缓存交替，8 次请求正确服务，`corruptions=0 evictions=0`；每个会话一个链文件，在三次各 +12 新 token 的停放（park）中从 238 MiB 增长到 594 MiB（全快照存储在 100k+ token 时每次停放会写一个全新的约 2.4 GiB 文件）。全新短会话的第一次停放为链播种（约 118 MiB：每层一个 K/V 页加模型固定的运行状态）；之后每次停放都是增量（+12 token 约 118 MiB），读回/恢复路径不变（读取约 0.4 秒，恢复约 0.04–0.08 秒）。
+在本分支的双 V100 层切分机器上（Qwen3.8-Flash-Next Q2_0，int8 KV）：两个会话通过一个临时缓存交替，8 次请求正确服务，`corruptions=0 evictions=0`。每个会话一个链文件，在三次各 +12 新 token 的停放（park）中从 238 MiB -> 594 MiB（全快照存储在 100k+ token 时每次停放会写一个全新的 ~2.4 GiB 文件）。全新短会话的第一次停放为链播种（~118 MiB：每层一个 K/V 页加模型固定的运行状态）；之后每次停放都是增量（+12 token 约 ~118 MiB），读回/恢复路径不变（读取约 0.4 s，恢复约 0.04-0.08 s）。
 
 ### 懒加载视觉（可选启用）
 
@@ -211,7 +354,15 @@ L2 归档在恢复后仍然可用。当字节预算和物理内存下限允许�
 
 - 文本请求永远不会启动编码器。图片请求先让引擎归还各 GPU 的显存——每张 GPU 一个预留，层切分时为 `[1700, 600]`，单卡为 `[1800]`，可用 `"vram_mib"` 覆盖——然后在引擎空闲时启动编码器并编码图片。
 - `idle_s` 秒没有图片请求后编码器停止，专家缓存长回完整大小。已编码的图片缓存在磁盘上，再发同一张图不会重新编码。
-- 在本分支的双 V100 层切分上实测：编码器空闲时缓存常驻 **14,005** 个专家（编码器常驻时为 12,688），冷图片请求 **5.9 秒**完成，编码器卸载后两个缓存都回到 14,005。见[详细说明](docs/zh_CN/DETAILS.md)。
+- 在本分支的双 V100 层切分上实测：编码器空闲时缓存常驻 **14,005** 个专家（编码器常驻时为 12,688），冷图片请求 **5.9 s** 完成，编码器卸载后两个缓存都回到 14,005。见[详细说明](docs/zh_CN/DETAILS.md)。
+
+## 遇到问题时
+
+常见问题及其修复方法见 [TROUBLESHOOTING.md](docs/zh_CN/TROUBLESHOOTING.md)。该页涵盖桌面应用、`strata` 命令和安装程序。完整的错误消息表见 [DETAILS.md](docs/zh_CN/DETAILS.md#troubleshooting)。
+
+如果服务器启动但请求失败，运行 `strata doctor`。它读取已安装的组件，并打印缺失或过期的内容；见 [TERMINAL.md](docs/TERMINAL.md#doctor)。
+
+如果回复只是慢而没有坏掉，请阅读 [TUNING.md](docs/TUNING.md)。它给出每个目标下真正重要的设置，以及每项设置的实测代价。
 
 ## 贡献
 
@@ -223,7 +374,7 @@ L2 归档在恢复后仍然可用。当字节预算和物理内存下限允许�
 4. 对性能声明，报告基线和候选、完整运行时设置、工作负载、重复次数和限制。尽可能附上原始数据或可复现命令。把内核计时与全模型吞吐分开，不要声明测量没有显示的增益。
 5. 向本仓库的 `main` 分支开 pull request。说明改动是 V100 专属、上游整合，还是通用 Strata 改进。不要把凭据、个人配置和无关的本地文件带进改动。
 
-当前测量方法见 [`benchmarks/README.md`](benchmarks/README.md) 和 [`docs/DETAILS.md`](docs/zh_CN/DETAILS.md)。贡献仍受项目许可证以及所含组件和模型文件的许可证约束。
+当前测量方法见 [`benchmarks/README.md`](benchmarks/README.md) 和 [`docs/zh_CN/DETAILS.md`](docs/zh_CN/DETAILS.md)。贡献仍受项目许可证以及所含组件和模型文件的许可证约束。
 
 ## 项目历史
 
@@ -233,6 +384,7 @@ L2 归档在恢复后仍然可用。当字节预算和物理内存下限允许�
 - [#15 — 从上游 PR #627 移植实测的 V100 KV gather 与 GDN 递归改动](https://github.com/jmnargi/Strata-V100/pull/15)
 - [#16 — 减少 V100 decode 注意力的洗牌与共享内存流量](https://github.com/jmnargi/Strata-V100/pull/16)
 - [#17 — 移植上游 PR #600 的 Volta 提示注意力内核](https://github.com/jmnargi/Strata-V100/pull/17)
+- [#88 — 读取 Gyro-L 的 pair-trellis 专家（TQP5/6/7），修复折叠 decode 窗口和层切分的提示词辅助器，并把 V100 配置改为 `layer_split 14`](https://github.com/jmnargi/Strata-V100/pull/88)
 
 这些报告描述的是具体测过的改动；它们不是跨模型或跨 GPU 的全面提速声明。更多细节见[完整 pull request 历史](https://github.com/jmnargi/Strata-V100/pulls?q=is%3Apr+is%3Amerged)和[提交历史](https://github.com/jmnargi/Strata-V100/commits/main)。
 
